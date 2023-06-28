@@ -23,7 +23,6 @@ public class MainActivity extends Activity {
         WebView webView = (WebView) findViewById(R.id.webView);
         WebSettings webSettings = webView.getSettings();
         webView.setWebContentsDebuggingEnabled(true); // 웹뷰 디버깅 허용 여부
-
         webSettings.setJavaScriptEnabled(true); // 웹페이지 자바스크립트 허용 여부
         webSettings.setSupportMultipleWindows(false); // 새창 띄우기 허용 여부
         webSettings.setDatabaseEnabled(true); // 데이터베이스 접근 허용 여부
@@ -35,25 +34,22 @@ public class MainActivity extends Activity {
                 Log.v("Tag", "Verbose 로그 메시지");
                 Log.d("WebView", "URL: " + url);
                 if (url.startsWith("https://www.youtube.com/")||url.startsWith("https://m.youtube.com/")) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                     try {
-                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                         // 패키지 이름으로 유튜브 앱을 명시적으로 지정
                         intent.setPackage("com.google.android.youtube");
-                        // 유튜브 앱이 설치되어 있는지 확인
-                        if (intent.resolveActivity(getPackageManager()) != null) {
-                            // 유튜브 앱을 실행
-                            startActivity(intent);
-                        } else {
-                            Log.d("WebView", "설치되어 있지 않음");
-                            // 유튜브 앱이 설치되어 있지 않은 경우 대체 동작을 수행하거나 오류 메시지를 표시할 수 있습니다.
-                        }
                     } catch (ActivityNotFoundException e) {
-                        Log.d("WebView", "설치되어 있지 않음2");
-                        // YouTube 앱이 설치되어 있지 않은 경우 대체 동작을 수행하거나 오류 메시지를 표시할 수 있습니다.
+                        Log.d("WebView", "설치되어 있지 않음");
+                        // YouTube 앱이 설치되어 있지 않은 경우 대체 동작을 수행하거나 오류 메시지를 표시.
                     }
+                    startActivity(intent);
+                    return true;
+                }else{
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    startActivity(intent);
                     return true;
                 }
-                return super.shouldOverrideUrlLoading(view, request);
+                //return super.shouldOverrideUrlLoading(view, request);
             }
         }); // 클릭시 새창 안뜨게 (알림 및 요청 관련 설정)
         webSettings.setDomStorageEnabled(true); // 로컬저장소 허용 여부
