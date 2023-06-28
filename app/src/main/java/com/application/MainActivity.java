@@ -21,11 +21,8 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         WebView webView = (WebView) findViewById(R.id.webView);
-        WebSettings webSettings = webView.getSettings();
+        webView.getSettings().setDefaultTextEncodingName("UTF-8"); // encoding 설정
         webView.setWebContentsDebuggingEnabled(true); // 웹뷰 디버깅 허용 여부
-        webSettings.setJavaScriptEnabled(true); // 웹페이지 자바스크립트 허용 여부
-        webSettings.setSupportMultipleWindows(false); // 새창 띄우기 허용 여부
-        webSettings.setDatabaseEnabled(true); // 데이터베이스 접근 허용 여부
         webView.setWebViewClient(new WebViewClient(){
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
@@ -51,19 +48,22 @@ public class MainActivity extends Activity {
                 }
                 //return super.shouldOverrideUrlLoading(view, request);
             }
-        }); // 클릭시 새창 안뜨게 (알림 및 요청 관련 설정)
-        webSettings.setDomStorageEnabled(true); // 로컬저장소 허용 여부
-        webView.getSettings().setDefaultTextEncodingName("UTF-8"); // encoding 설정
+        });
+
+        WebSettings webSettings = webView.getSettings();
+
+        webSettings.setJavaScriptEnabled(true); // 웹페이지 자바스크립트 허용 여부
+        webSettings.setDomStorageEnabled(true); // 로컬저장소 허용 여부(localStorage)
+        webSettings.setSupportMultipleWindows(false); // 새창 띄우기 허용 여부
+        webSettings.setDatabaseEnabled(true); // 데이터베이스 접근 허용 여부
         webSettings.setDisplayZoomControls(true); // 돋보기 없애기
         webSettings.setJavaScriptCanOpenWindowsAutomatically(false); // 자바스크립트 새창 띄우기(멀티뷰) 허용 여부
-        webSettings.setLoadWithOverviewMode(true); // 메타태그 허용 여부
-             // 컨텐츠가 웹뷰보다 클 경우 스크린 크기에 맞게 조정
-        webSettings.setLoadWithOverviewMode(true);
+        webSettings.setLoadWithOverviewMode(true); // 컨텐츠가 웹뷰보다 클 경우 스크린 크기에 맞게 조정
         webSettings.setSupportZoom(false); // 화면 줌 허용 여부
-        webSettings.setAllowFileAccessFromFileURLs(true); // 파일 URL로부터 파일 접근 허용
-        webSettings.setAllowContentAccess(true); // 컨텐츠 접근 허용
         webSettings.setBuiltInZoomControls(false); // 화면 확대 축소 허용 여부
+        webSettings.setAllowContentAccess(true); // 컨텐츠 접근 허용
         webSettings.setAllowFileAccess(true); // 파일 접근 허용 여부
+        webSettings.setAllowFileAccessFromFileURLs(true); // 파일 URL로부터 파일 접근 허용
 
         webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE); // 브라우저 캐시 허용 여부
 
