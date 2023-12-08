@@ -2,24 +2,46 @@ package com.application;
 
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.*;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.webkit.*;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 
 import static androidx.constraintlayout.widget.ConstraintLayoutStates.TAG;
 
 public class MainActivity extends Activity {
     private ValueCallback mFilePathCallback;
     private final static int FILECHOOSER_NORMAL_REQ_CODE = 0;
+
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // 위치 권한 확인
+        if (checkLocationPermission()) {
+            // 위치 정보 가져오기
+            getLocation();
+        } else {
+            // 권한 요청
+            requestLocationPermission();
+        }
 
         WebView webView = (WebView) findViewById(R.id.webView);
         webView.setWebContentsDebuggingEnabled(true); // 웹뷰 디버깅 허용 여부
@@ -45,6 +67,102 @@ public class MainActivity extends Activity {
 
         //webView.loadUrl("https://www.hongsedu.co.kr/");
         webView.loadUrl("http://www.aflk-chat.com/chat/login");
+    }
+
+    // Existing methods...
+
+    private String getAddressFromCoordinates(Context context, double latitude, double longitude) {
+        Geocoder geocoder = new Geocoder(context, Locale.getDefault());
+        String result = null;
+
+        try {
+            List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);
+            if (addresses != null && addresses.size() > 0) {
+                Address address = addresses.get(0);
+                // You can customize the format of the address as per your requirements
+                result = address.getAddressLine(0) + ", " + address.getLocality();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
+    private boolean checkLocationPermission() {
+        // 위치 권한이 있는지 확인
+        return ContextCompat.checkSelfPermission(this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requestLocationPermission() {
+        // 위치 권한이 없으면 권한 요청
+        ActivityCompat.requestPermissions(this,
+                new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                LOCATION_PERMISSION_REQUEST_CODE);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // 권한이 허용되면 위치 정보 가져오기
+                getLocation();
+            } else {
+                // 권한이 거부되면 사용자에게 알림
+                Toast.makeText(this, "위치 권한이 필요합니다.", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void getLocation() {
+        // 위치 관리자 가져오기
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        // 위치 정보 수신기 생성
+        LocationListener locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                // 위치 정보가 변경될 때 호출됨
+                double latitude = location.getLatitude();
+                double longitude = location.getLongitude();
+
+                // Reverse geocoding to get address from coordinates
+                String address = getAddressFromCoordinates(MainActivity.this, latitude, longitude);
+                if (address != null) {
+                    Toast.makeText(MainActivity.this, "현재 위치: " + address, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(MainActivity.this, "위도: " + latitude + ", 경도: " + longitude, Toast.LENGTH_SHORT).show();
+                }
+
+                // 위치 정보 수신이 더 이상 필요하지 않으면 위치 업데이트 중지
+                locationManager.removeUpdates(this);
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+            }
+
+            @Override
+            public void onProviderEnabled(String provider) {
+            }
+
+            @Override
+            public void onProviderDisabled(String provider) {
+            }
+        };
+
+        // 위치 업데이트를 요청
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                        0, 0, locationListener);
+            }
+        } else {
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                    0, 0, locationListener);
+        }
     }
 
     @Override
